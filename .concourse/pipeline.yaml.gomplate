@@ -55,7 +55,7 @@
           OUTFILE=${PWD}/bin/{{ $.image }} ;
           cd src ;
           GO111MODULES=on go mod vendor ;
-          go build -o ${OUTFILE} ./{{ $.subdir }}/
+          CGO_ENABLED=0 go build -o ${OUTFILE} ./{{ $.subdir }}/
     image: docker.build-base
     input_mapping:
       src: git.{{ $.repo }}
@@ -67,8 +67,14 @@
       outputs:
       - name: image
       run:
-        path: /usr/bin/tar
-        args: [ cf, image/image.tar, -C, bin, {{ $.image }} ]
+        path: /bin/sh
+        args:
+        - -c
+        - >
+          set -o errexit -o nounset -o xtrace ;
+          mkdir -p bin/tmp ;
+          chmod a+rwx bin/tmp ;
+          tar cf image/image.tar -C bin {{ $.image }} tmp ;
     image: docker.build-base
   - put: docker.{{ $.image }}
     params:

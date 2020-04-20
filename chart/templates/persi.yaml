@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ mustMerge (dict "name" "persi") . | include "eirinix.component-name" }}
+  labels:
+    app.kubernetes.io/component: persi
+{{ include "eirinix.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "eirinix.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: persi
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "eirinix.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: persi
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: eirini
+      containers:
+        - name: persi
+          {{- with .Values.image }}
+          image: {{ printf "%s/eirinix-persi:%s" .repository .tag | quote}}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: OPERATOR_SERVICE_NAME
+            value: eirini-persi
+          - name: OPERATOR_WEBHOOK_NAMESPACE
+            value: {{ .Release.Namespace | quote }}
+          - name: OPERATOR_WEBHOOK_HOST
+            value: "0.0.0.0"
+          - name: OPERATOR_WEBHOOK_PORT
+            value: "8443"
+          - name: NAMESPACE
+            value: {{ .Values.namespace }}
+          resources:
+            {{- index .Values.resources "persi" | toYaml | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eirini-persi
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  type: ClusterIP
+  selector:
+    quarks.cloudfoundry.org/instance-group-name: eirini
+    quarks.cloudfoundry.org/deployment-name: {{ index .Values "deployment-name" }}
+  ports:
+  - protocol: TCP
+    name: https
+    port: 443
+    targetPort: 8443

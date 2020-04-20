@@ -1,0 +1,122 @@
+{{- $component := "ssh-proxy" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ mustMerge (dict "name" $component) . | include "eirinix.component-name" }}
+  labels:
+    app.kubernetes.io/component: {{ $component }}
+{{ include "eirinix.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "eirinix.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ $component }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "eirinix.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ $component }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: eirini
+      initContainers:
+      - name: generate-config
+        image: mookas/eirini-{{ $component }}-setup
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - name: config
+          mountPath: /run/secrets/config
+        - name: uaa-client
+          mountPath: /run/secrets/uaa-client-password
+          subPath: password
+        - name: ssh-proxy-host-key
+          mountPath: /run/secrets/ssh-proxy-host-key.key
+          subPath: proxy.key
+      containers:
+      - name: {{ $component }}
+        {{- with .Values.image }}
+        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
+        {{- end }}
+        command: [ /{{ $component }} ]
+        args:
+        - --config
+        - /run/secrets/config/eirini-ssh-proxy.json
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: SSH_PROXY_KUBERNETES_NAMESPACE
+          value: {{ .Values.namespace }}
+        - name: SSH_PROXY_DAEMON_PORT
+          value: "0"
+        volumeMounts:
+        - name: config
+          mountPath: /run/secrets/config
+        - name: uaa-ca-cert
+          mountPath: /run/secrets/uaa-ca.crt
+          subPath: ca.crt
+        - name: cc-api-ca-cert
+          mountPath: /run/secrets/cc-api-ca.crt
+          subPath: ca.crt
+        resources:
+          {{- index .Values.resources $component | toYaml | nindent 12 }}
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: uaa-client
+        secret:
+          secretName: var-uaa-clients-ssh-proxy-secret
+          items:
+          - key: password
+            path: password
+      - name: ssh-proxy-host-key
+        secret:
+          secretName: var-eirini-ssh-proxy-key
+          items:
+          - key: private_key
+            path: proxy.key
+      - name: uaa-ca-cert
+        secret:
+          secretName: var-uaa-ca
+          items:
+          - key: certificate
+            path: ca.crt
+      - name: cc-api-ca-cert
+        secret:
+          secretName: var-cc-public-tls
+          items:
+          - key: certificate
+            path: ca.crt
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eirini-{{ $component }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  type: ClusterIP
+  selector:
+    quarks.cloudfoundry.org/instance-group-name: eirini
+    quarks.cloudfoundry.org/deployment-name: {{ index .Values "deployment-name" }}
+  ports:
+  - protocol: TCP
+    name: https
+    port: 443
+    targetPort: 2999
