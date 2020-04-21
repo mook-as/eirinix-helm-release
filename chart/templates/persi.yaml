@@ -23,7 +23,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: eirini
+      serviceAccountName: {{ .Values.service_account.name | quote }}
       containers:
         - name: persi
           {{- with .Values.image }}

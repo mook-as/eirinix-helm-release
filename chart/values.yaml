@@ -58,3 +58,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+service_account:
+  create: true
+  name: "eirinix"
