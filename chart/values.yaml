@@ -36,7 +36,7 @@ persi-broker:
 replicaCount: 1
 
 image:
-  repository: mookas #splatform
+  repository: splatform
   tag: latest
   pullPolicy: Always #IfNotPresent
 
