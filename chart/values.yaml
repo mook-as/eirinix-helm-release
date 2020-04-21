@@ -59,6 +59,11 @@ tolerations: []
 
 affinity: {}
 
+rbac:
+  webhook:
+    cluster_role:
+      rules: []
+
 service_account:
   create: true
   name: "eirinix"
