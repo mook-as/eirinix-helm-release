@@ -30,7 +30,7 @@ spec:
         {{- with .Values.image }}
         image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
         {{- end }}
-        command: [ /eirini-{{ $component }} ]
+        command: [ /{{ $component }} ]
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: EIRINI_EXTENSION_HOST
