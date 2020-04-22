@@ -39,7 +39,7 @@ spec:
       containers:
         - name: loggregator-bridge
           {{- with .Values.image }}
-          image: {{ printf "%s/eirinix-loggregator-bridge:%s" .repository .tag | quote}}
+          image: {{ printf "%s/eirinix-loggregator-bridge:%s" .repository .tag | quote }}
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: [ --config, /run/secrets/config/eirini-loggregator-bridge.yaml ]
