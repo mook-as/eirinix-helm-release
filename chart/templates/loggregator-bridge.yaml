@@ -24,7 +24,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ .Values.service_account.name | quote }}
-      initContainers:
+      initContainers: # TODO: Remove once https://github.com/SUSE/eirini-loggregator-bridge/pull/14 is merged
         - name: generate-config
           image: mookas/eirini-loggregator-bridge-setup
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -46,6 +46,16 @@ spec:
           env:
           - name: EIRINI_LOGGREGATOR_BRIDGE_LOGLEVEL
             value: DEBUG
+          - name: LOGGREGATOR_CERT_PATH
+            value: /run/secrets/loggregator-cert/certificate
+          - name: LOGGREGATOR_KEY_PATH
+            value: /run/secrets/loggregator-cert/private_key
+          - name: LOGGREGATOR_CA_PATH
+            value: /run/secrets/loggregator-ca/certificate
+          - name: NAMESPACE
+            value: {{ .Values.namespace }}
+          - name: LOGGREGATOR_ENDPOINT
+            value: {{ .Values.loggregator.endpoint }}
           volumeMounts:
           - name: config
             mountPath: /run/secrets/config
