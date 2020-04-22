@@ -27,7 +27,9 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       initContainers:
       - name: generate-config
-        image: mookas/eirini-{{ $component }}-setup
+        {{- with .Values.image }}
+        image: {{ printf "%s/eirinix-%s-setup:%s" .repository $component .tag | quote }}
+        {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: SERVICE_CONFIG

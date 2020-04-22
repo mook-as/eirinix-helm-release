@@ -1,9 +1,10 @@
+{{ $component := "loggregator-bridge" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ mustMerge (dict "name" "loggregator-bridge") . | include "eirinix.component-name" }}
+  name: {{ mustMerge (dict "name" $component) . | include "eirinix.component-name" }}
   labels:
-    app.kubernetes.io/component: loggregator-bridge
+    app.kubernetes.io/component: {{ $component }}
 {{ include "eirinix.labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -11,13 +12,13 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ include "eirinix.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: loggregator-bridge
+      app.kubernetes.io/component: {{ $component }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "eirinix.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: loggregator-bridge
+        app.kubernetes.io/component: {{ $component }}
     spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -26,7 +27,9 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       initContainers: # TODO: Remove once https://github.com/SUSE/eirini-loggregator-bridge/pull/14 is merged
         - name: generate-config
-          image: mookas/eirini-loggregator-bridge-setup
+          {{- with .Values.image }}
+          image: {{ printf "%s/eirinix-%s-setup:%s" .repository $component .tag | quote }}
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: NAMESPACE
@@ -37,9 +40,9 @@ spec:
           - name: config
             mountPath: /run/secrets/config
       containers:
-        - name: loggregator-bridge
+        - name: {{ $component }}
           {{- with .Values.image }}
-          image: {{ printf "%s/eirinix-loggregator-bridge:%s" .repository .tag | quote }}
+          image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: [ --config, /run/secrets/config/eirini-loggregator-bridge.yaml ]
@@ -64,7 +67,7 @@ spec:
           - name: loggregator-cert
             mountPath: /run/secrets/loggregator-cert
           resources:
-            {{- index .Values.resources "loggregator-bridge" | toYaml | nindent 12 }}
+            {{- index .Values.resources $component | toYaml | nindent 12 }}
       volumes:
       - name: config
         emptyDir: {}
