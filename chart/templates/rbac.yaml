@@ -1,4 +1,4 @@
-{{ if .Values.rbac.create }}
+{{ if .Values.rbac.enable }}
 # eirini-webhook cluster role for eirini service account.
 # Used to implement eirinix extensions. 
 # Wide permissions needed until https://github.com/SUSE/eirinix/issues/22 is done.

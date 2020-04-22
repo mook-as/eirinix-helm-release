@@ -60,7 +60,7 @@ tolerations: []
 affinity: {}
 
 rbac:
-  create: false
+  enable: false
   webhook:
     cluster_role:
       rules: []
