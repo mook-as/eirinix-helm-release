@@ -10,7 +10,7 @@ namespace: kubecf-eirini
 deployment-name: kubecf
 
 loggregator:
-  endpoint: doppler.service.cf.internal:8082
+  endpoint: doppler:8082
   secrets:
     ca: var-loggregator-ca          # Name of secret containing loggregator CA
     cert: var-loggregator-tls-agent # Name of secret containing cert info
@@ -32,6 +32,10 @@ persi-broker:
   icon_image: Eirini broker
   secrets:
     auth-password: var-eirini-persi-broker-auth-password
+
+ssh:
+  cc-api-url: https://api:9024
+  uaa-token-url: https://uaa:8443/oauth/token
 
 replicaCount: 1
 

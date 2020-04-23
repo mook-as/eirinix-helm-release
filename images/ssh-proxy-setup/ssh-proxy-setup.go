@@ -32,11 +32,11 @@ func writeConfig() error {
 	}
 	config := configStruct{
 		EnableCFAuth:   true,
-		CcApiUrl:       "https://cloud-controller-ng.service.cf.internal:9024",
+		CcApiUrl:       os.Getenv("CC_API_URL"),
 		SkipCertVerify: false,
 		UAAUsername:    "ssh-proxy",
 		UAAPassword:    string(uaaPassword),
-		UAATokenURL:    "https://uaa.service.cf.internal:8443/oauth/token",
+		UAATokenURL:    os.Getenv("UAA_TOKEN_URL"),
 		Address:        "0.0.0.0:2222",
 		LogLevel:       "info",
 		HostKey:        string(hostKey),

@@ -31,6 +31,11 @@ spec:
         image: {{ printf "%s/eirinix-%s-setup:%s" .repository $component .tag | quote }}
         {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: CC_API_URL
+          value: {{ index .Values.ssh "cc-api-url" }}
+        - name: UAA_TOKEN_URL
+          value: {{ index .Values.ssh "uaa-token-url" }}
         volumeMounts:
         - name: config
           mountPath: /run/secrets/config
