@@ -44,6 +44,8 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+externalIPs: []
+
 service:
   type: ClusterIP
   port: 80

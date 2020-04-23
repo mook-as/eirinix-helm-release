@@ -40,7 +40,7 @@ spec:
         - name: EIRINI_EXTENSION_NAMESPACE
           value: {{ .Values.namespace }}
         - name: OPERATOR_SERVICE_NAME
-          value: eirini-ssh
+          value: eirinix-{{ $component }}
         - name: OPERATOR_WEBHOOK_NAMESPACE
           value: {{ .Release.Namespace }}
         resources:
@@ -62,13 +62,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: eirini-{{ $component }}
+  name: eirinix-{{ $component }}
   namespace: {{ .Release.Namespace | quote }}
 spec:
   type: ClusterIP
   selector:
-    quarks.cloudfoundry.org/instance-group-name: eirini
-    quarks.cloudfoundry.org/deployment-name: {{ index .Values "deployment-name" }}
+    app.kubernetes.io/name: {{ include "eirinix.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ $component }}
   ports:
   - protocol: TCP
     name: https
