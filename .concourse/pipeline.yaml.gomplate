@@ -41,7 +41,7 @@
       build_args:
         USER: {{ $.git.user }}
         EMAIL: {{ $.git.email }}
-        BASE_IMAGE: scratch
+        # BASE_IMAGE: scratch # FIXME: images are missing /tmp folder, which makes extensions to crash
 {{ end }}
 
 groups:
