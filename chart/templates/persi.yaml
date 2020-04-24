@@ -30,8 +30,8 @@ spec:
           {{- with .Values.image }}
           image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
           {{- end }}
-          command: [ /{{ $component }} ]
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ start ]
           env:
           - name: OPERATOR_SERVICE_NAME
             value: eirini-{{ $component }}
