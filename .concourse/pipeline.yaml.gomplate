@@ -38,6 +38,10 @@
   - put: docker.{{ $.image }}
     params:
       build: git.{{ $.repo }}/
+      build_args:
+        USER: {{ $.git.user }}
+        EMAIL: {{ $.git.email }}
+        BASE_IMAGE: scratch
 {{ end }}
 
 groups:
@@ -66,10 +70,6 @@ resources:
     repository: {{ $.docker.org }}/eirinix-{{ . }}
     username:   ((docker-username))
     password:   ((docker-password))
-    build_args:
-      USER: {{ $.git.user }}
-      EMAIL: {{ $.git.email }}
-      BASE_IMAGE: scratch
 {{ end }}
 
 jobs:
