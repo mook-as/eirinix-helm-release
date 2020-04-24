@@ -77,25 +77,25 @@ spec:
         emptyDir: {}
       - name: uaa-client
         secret:
-          secretName: var-uaa-clients-ssh-proxy-secret
+          secretName:  {{ index .Values $component "secrets" "uaa-client-proxy-secret" }}
           items:
           - key: password
             path: password
       - name: ssh-proxy-host-key
         secret:
-          secretName: var-eirini-ssh-proxy-key
+          secretName: {{ index .Values $component "secrets" "host-keys" }}
           items:
           - key: private_key
             path: proxy.key
       - name: uaa-ca-cert
         secret:
-          secretName: var-uaa-ca
+          secretName:  {{ index .Values $component "secrets" "uaa-ca" }}
           items:
           - key: certificate
             path: ca.crt
       - name: cc-api-ca-cert
         secret:
-          secretName: var-cc-public-tls
+          secretName:  {{ index .Values $component "secrets" "cc-api-ca" }}
           items:
           - key: certificate
             path: ca.crt

@@ -37,6 +37,13 @@ ssh:
   cc-api-url: https://api:9024
   uaa-token-url: https://uaa:8443/oauth/token
 
+ssh-proxy:
+  secrets:
+    host-keys: var-diego-ssh-proxy-host-key
+    uaa-client-proxy-secret: var-uaa-clients-ssh-proxy-secret
+    uaa-ca: var-uaa-ca
+    cc-api-ca: var-cc-public-tls
+
 replicaCount: 1
 
 image:
