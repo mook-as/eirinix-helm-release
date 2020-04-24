@@ -68,7 +68,6 @@ spec:
         image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
         {{- end }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: [ /{{ $component }} ]
         env:
         - name: BROKER_CONFIG_PATH
           value: /run/secrets/config/eirini-persi-broker.yml
