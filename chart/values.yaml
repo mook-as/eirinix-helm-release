@@ -5,7 +5,7 @@
 # The namespace into which Eirini applications will be deployed.
 # This does not have to (and probably shouldn't) match the namespace in which
 # Eirini, or the extensions helm chart, is deployed into.
-namespace: kubecf-eirini
+namespace: kubecf
 
 deployment-name: kubecf
 
@@ -31,7 +31,7 @@ persi-broker:
   display_name: Eirini broker
   icon_image: Eirini broker
   secrets:
-    auth-password: var-eirini-persi-broker-auth-password
+    auth-password: ~ # Password is randomly generated if not given
 
 ssh:
   cc-api-url: https://api:9024
