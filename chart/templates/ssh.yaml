@@ -30,12 +30,13 @@ spec:
         {{- with .Values.image }}
         image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
         {{- end }}
-        command: [ /{{ $component }} ]
+        command: [ /bin/{{ $component }}-extension ]
+        args: [ start ]
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
-        - name: EIRINI_EXTENSION_HOST
+        - name: OPERATOR_WEBHOOK_HOST
           value: "0.0.0.0"
-        - name: EIRINI_EXTENSION_PORT
+        - name: OPERATOR_WEBHOOK_PORT
           value: "2999"
         - name: EIRINI_EXTENSION_NAMESPACE
           value: {{ .Values.namespace }}
