@@ -1,4 +1,5 @@
 {{- $component := "ssh-proxy" }}
+{{- $image_component := "ssh" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,9 +49,9 @@ spec:
       containers:
       - name: {{ $component }}
         {{- with .Values.image }}
-        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
+        image: {{ printf "%s/eirinix-%s:%s" .repository $image_component .tag | quote}}
         {{- end }}
-        command: [ /{{ $component }} ]
+        command: [ /bin/{{ $component }} ]
         args:
         - --config
         - /run/secrets/config/eirini-ssh-proxy.json
