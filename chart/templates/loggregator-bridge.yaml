@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: {{ $component }}
 {{ include "eirinix.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ index .Values $component "replicaCount" }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "eirinix.name" . }}
@@ -27,10 +27,10 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       containers:
         - name: {{ $component }}
-          {{- with .Values.image }}
+          {{- with index .Values $component "image" }}
           image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
+          imagePullPolicy: {{ .pullPolicy }}
           {{- end }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: EIRINI_LOGGREGATOR_BRIDGE_LOGLEVEL
             value: DEBUG
@@ -43,40 +43,36 @@ spec:
           - name: NAMESPACE
             value: {{ .Values.namespace }}
           - name: LOGGREGATOR_ENDPOINT
-            value: {{ .Values.loggregator.endpoint }}
+            value: {{ index .Values "loggregator-bridge" "endpoint" }}
           volumeMounts:
           - name: loggregator-ca
             mountPath: /run/secrets/loggregator-ca
           - name: loggregator-cert
             mountPath: /run/secrets/loggregator-cert
           resources:
-            {{- index .Values.resources $component | toYaml | nindent 12 }}
+            {{- index .Values $component "resources" | toYaml | nindent 12 }}
       volumes:
       - name: config
         emptyDir: {}
       - name: loggregator-ca
         secret:
-          secretName: {{ .Values.loggregator.secrets.ca }}
+          secretName: {{ index .Values $componet "secrets" "ca" }}
           items:
           - key: certificate
             path: certificate
       - name: loggregator-cert
         secret:
-          secretName: {{ .Values.loggregator.secrets.cert }}
+          secretName: {{ index .Values $componet "secrets" "cert" }}
           items:
           - key: certificate
             path: certificate
           - key: private_key
             path: private_key
-      {{- with .Values.nodeSelector }}
+    {{- with index .Values $component }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.affinity }}
+        {{- toYaml .nodeSelector | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+        {{- toYaml .affinity | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .tolerations | nindent 8 }}
     {{- end }}

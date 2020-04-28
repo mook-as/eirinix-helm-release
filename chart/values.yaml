@@ -5,17 +5,50 @@
 # The namespace into which Eirini applications will be deployed.
 # This does not have to (and probably shouldn't) match the namespace in which
 # Eirini, or the extensions helm chart, is deployed into.
-namespace: kubecf
+namespace: eirini
 
-deployment-name: kubecf
+loggregator-bridge:
+  replicaCount: 1
+  image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
 
-loggregator:
   endpoint: doppler:8082
   secrets:
     ca: var-loggregator-ca          # Name of secret containing loggregator CA
     cert: var-loggregator-tls-agent # Name of secret containing cert info
 
+peri:
+  replicaCount: 1
+  image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
 persi-broker:
+  replicaCount: 1
+  image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  setup-image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
   service-plans:
   - id: default
     name: "default"
@@ -34,43 +67,45 @@ persi-broker:
     auth-password: ~ # Password is randomly generated if not given
 
 ssh:
+  replicaCount: 1
+  image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
   cc-api-url: https://api:9024
   uaa-token-url: https://uaa:8443/oauth/token
 
 ssh-proxy:
+  replicaCount: 1
+  image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  setup-image:
+    repository: splatform
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
   secrets:
     host-keys: var-diego-ssh-proxy-host-key
     uaa-client-proxy-secret: var-uaa-clients-ssh-proxy-secret
     uaa-ca: var-uaa-ca
     cc-api-ca: var-cc-public-tls
 
-replicaCount: 1
-
-image:
-  repository: splatform
-  tag: latest
-  pullPolicy: Always #IfNotPresent
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 externalIPs: []
-
-service:
-  type: ClusterIP
-  port: 80
-
-resources:
-  loggregator-bridge: {}
-  persi: {}
-  persi-broker: {}
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
 
 rbac:
   enable: false

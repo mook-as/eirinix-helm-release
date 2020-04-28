@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: {{ $component }}
 {{ include "eirinix.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ index .Values $component "replicaCount" }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "eirinix.name" . }}
@@ -27,12 +27,12 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       containers:
       - name: {{ $component }}
-        {{- with .Values.image }}
-        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote}}
+        {{- with index .Values $component "image" }}
+        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
+        imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
         command: [ /bin/{{ $component }}-extension ]
         args: [ start ]
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: OPERATOR_WEBHOOK_HOST
           value: "0.0.0.0"
@@ -45,20 +45,15 @@ spec:
         - name: OPERATOR_WEBHOOK_NAMESPACE
           value: {{ .Release.Namespace }}
         resources:
-          {{- index .Values.resources $component | toYaml | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+          {{- index .Values $component "resources" | toYaml | nindent 12 }}
+    {{- with index .Values $component }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.affinity }}
+        {{- toYaml .nodeSelector | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+        {{- toYaml .affinity | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .tolerations | nindent 8 }}
     {{- end }}
-
 ---
 apiVersion: v1
 kind: Service
