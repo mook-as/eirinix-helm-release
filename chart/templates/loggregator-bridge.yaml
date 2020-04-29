@@ -56,13 +56,13 @@ spec:
         emptyDir: {}
       - name: loggregator-ca
         secret:
-          secretName: {{ index .Values $componet "secrets" "ca" }}
+          secretName: {{ index .Values $component "secrets" "ca" }}
           items:
           - key: certificate
             path: certificate
       - name: loggregator-cert
         secret:
-          secretName: {{ index .Values $componet "secrets" "cert" }}
+          secretName: {{ index .Values $component "secrets" "cert" }}
           items:
           - key: certificate
             path: certificate
