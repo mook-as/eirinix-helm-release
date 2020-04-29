@@ -23,7 +23,7 @@ loggregator-bridge:
     ca: var-loggregator-ca          # Name of secret containing loggregator CA
     cert: var-loggregator-tls-agent # Name of secret containing cert info
 
-peri:
+persi:
   replicaCount: 1
   image:
     repository: splatform

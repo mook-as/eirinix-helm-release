@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# This script packages the helm chart, with a values.yaml that has been modified
+# to contain image tags as passed via environment variables.  The variables are
+# named TAG_FILE_xxx where xxx is the image (e.g. TAG_FILE_LOGGREGATOR_BRIDGE
+# for the loggregator-bridge image), and points to a file that contains the tag
+# to use.  Any options given are passed to `helm package`.
+
+set -o errexit -o nounset -o pipefail
+
+dir="$(mktemp -d)"
+function cleanup() {
+    rm -rf "${dir}"
+}
+trap cleanup EXIT
+
+cp -r chart/* "${dir}"
+ruby bin/tag-images.rb chart/values.yaml "${dir}/values.yaml"
+
+version="$(git describe --tag --long || printf "0.0.0-g%s" "$(git describe --always)")"
+set -o xtrace
+helm package "${dir}" --version="${version}" "${@}"
