@@ -49,7 +49,8 @@ spec:
       containers:
       - name: {{ $component }}
         {{- with index .Values $component "image" }}
-        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
+        # Note: this is in the "ssh" image, not "ssh-proxy".
+        image: {{ printf "%s/eirinix-ssh:%s" .repository .tag | quote }}
         imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
         command: [ /bin/{{ $component }} ]
