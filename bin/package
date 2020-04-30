@@ -14,6 +14,7 @@ function cleanup() {
 }
 trap cleanup EXIT
 
+echo "Copying chart to temporary directory..."
 cp -r chart/* "${dir}"
 
 tag="$(git describe --tag --abbrev=0 || echo "0.0.0")"
@@ -23,6 +24,7 @@ hash="$(git log -1 --pretty=%h)"
 extra=""
 
 if [[ -n "${OVERRIDES:-}" ]] ; then
+    echo "Applying values.yaml overrides..."
     echo "${OVERRIDES}" | erb > "${dir}/.overrides.yaml"
     ruby bin/merge-yaml.rb chart/values.yaml "${dir}/.overrides.yaml" "${dir}/values.yaml"
     extra=".$(sha256sum "${dir}/.overrides.yaml" | head -c 8)"
@@ -30,5 +32,13 @@ if [[ -n "${OVERRIDES:-}" ]] ; then
 fi
 version="${tag#v}-${commits}.${time}+g${hash}${extra}"
 
-set -o xtrace
+# Save information for the concourse pipeline, if requested.
+if [[ -n "${VERSION_FILE:-}" ]] ; then
+    echo "${version}" > "${VERSION_FILE}"
+fi
+if [[ -n "${COMMIT_HASH_FILE:-}" ]] ; then
+    echo "${hash}" > "${COMMIT_HASH_FILE}"
+fi
+
+echo "Packaging chart..."
 helm package "${dir}" --version="${version}" "${@}"
