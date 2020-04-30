@@ -108,7 +108,7 @@ fullnameOverride: ""
 externalIPs: []
 
 rbac:
-  enable: false
+  enable: true
   webhook:
     cluster_role:
       rules: []
