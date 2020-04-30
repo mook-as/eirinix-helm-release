@@ -17,10 +17,9 @@ trap cleanup EXIT
 echo "Copying chart to temporary directory..."
 cp -r chart/* "${dir}"
 
-tag="$(git describe --tag --abbrev=0 || echo "0.0.0")"
+tag="$(git describe --tag --abbrev=0 --exclude '*+g*' || echo "0.0.0")"
 commits="$(git rev-list --count --first-parent HEAD)"
-time="$(date --utc +%s)"
-hash="$(git log -1 --pretty=%h)"
+hash="$(git log -1 --pretty=%H)"
 extra=""
 
 if [[ -n "${OVERRIDES:-}" ]] ; then
@@ -30,15 +29,15 @@ if [[ -n "${OVERRIDES:-}" ]] ; then
     extra=".$(sha256sum "${dir}/.overrides.yaml" | head -c 8)"
     rm "${dir}/.overrides.yaml"
 fi
-version="${tag#v}-${commits}.${time}+g${hash}${extra}"
+version="${tag#v}-${commits}+g${hash:0:8}"
 
 # Save information for the concourse pipeline, if requested.
 if [[ -n "${VERSION_FILE:-}" ]] ; then
-    echo "${version}" > "${VERSION_FILE}"
+    echo -n "${version}" > "${VERSION_FILE}"
 fi
 if [[ -n "${COMMIT_HASH_FILE:-}" ]] ; then
-    echo "${hash}" > "${COMMIT_HASH_FILE}"
+    echo -n "${hash}" > "${COMMIT_HASH_FILE}"
 fi
 
 echo "Packaging chart..."
-helm package "${dir}" --version="${version}" "${@}"
+helm package "${dir}" --version="${version}${extra}" "${@}"
