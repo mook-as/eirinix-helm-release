@@ -1,17 +1,15 @@
 #!/usr/bin/env ruby
 
 # This files merges one yaml file with a second yaml file, in a way that is
-# comment-preserving.  The changes file is first rendered as ERB, in case it
-# contains anything processing.
+# comment-preserving.
 
 # Usage:
-#  merge-yaml.rb source.yaml changes.yaml.erb output.yaml
+#  merge-yaml.rb source.yaml changes.yaml output.yaml
 
-require 'erb'
 require 'json'
 require 'yaml'
 
-fail "Usage: #{$0} source.yaml changes.yaml.erb output.yaml" unless ARGV.length == 3
+fail "Usage: #{$0} source.yaml changes.yaml output.yaml" unless ARGV.length == 3
 
 # Given two YAML mappings, find all YAML nodes in the first mapping that
 # corresponds to the nodes in the second mapping, along with the value in the
@@ -43,8 +41,7 @@ end
 
 contents = File.read(ARGV[0])
 doc = YAML.parse(contents)
-change_file = File.read(ARGV[1])
-changes = YAML.parse(ERB.new(change_file).tap { |e| e.filename = ARGV[1] }.result)
+changes = YAML.parse_file(ARGV[1])
 
 replacements = find_changes(doc.root, changes.root)
 # Replace starting towards the end of the file, so that we can be sure we do not
