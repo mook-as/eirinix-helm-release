@@ -22,6 +22,10 @@ if [[ -n "${OVERRIDES:-}" ]] ; then
     rm "${dir}/.overrides.yaml.erb"
 fi
 
-version="$(git describe --tag --long || printf "0.0.0-g%s" "$(git describe --always)")"
+tag="$(git describe --tag --abbrev=0 || echo "0.0.0")"
+commits="$(git rev-list --count --first-parent HEAD)"
+hash="$(git log -1 --pretty=%h)"
+version="${tag#v}-${commits}+g${hash}"
+
 set -o xtrace
 helm package "${dir}" --version="${version}" "${@}"
