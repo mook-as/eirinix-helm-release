@@ -15,7 +15,12 @@ function cleanup() {
 trap cleanup EXIT
 
 cp -r chart/* "${dir}"
-ruby bin/tag-images.rb chart/values.yaml "${dir}/values.yaml"
+
+if [[ -n "${OVERRIDES:-}" ]] ; then
+    echo "${OVERRIDES}" > "${dir}/.overrides.yaml.erb"
+    ruby bin/merge-yaml.rb chart/values.yaml "${dir}/.overrides.yaml.erb" "${dir}/values.yaml"
+    rm "${dir}/.overrides.yaml.erb"
+fi
 
 version="$(git describe --tag --long || printf "0.0.0-g%s" "$(git describe --always)")"
 set -o xtrace
