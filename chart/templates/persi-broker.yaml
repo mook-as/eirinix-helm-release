@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/component: {{ $component }}
 {{ include "eirinix.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ index .Values $component "replicaCount" }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "eirinix.name" . }}
@@ -27,10 +27,10 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       initContainers:
       - name: generate-config
-        {{- with .Values.image }}
+        {{- with index .Values $component "setup-image" }}
         image: {{ printf "%s/eirinix-%s-setup:%s" .repository $component .tag | quote }}
+        imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: SERVICE_CONFIG
           value: |
@@ -64,10 +64,10 @@ spec:
           mountPath: /run/secrets/auth-password
       containers:
       - name: persi-broker
-        {{- with .Values.image }}
+        {{- with index .Values $component "image" }}
         image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
+        imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: BROKER_CONFIG_PATH
           value: /run/secrets/config/eirini-persi-broker.yml
@@ -75,24 +75,20 @@ spec:
         - name: config
           mountPath: /run/secrets/config
         resources:
-          {{- index .Values.resources $component | toYaml | nindent 12 }}
+          {{- index .Values $component "resources" | toYaml | nindent 10 }}
       volumes:
       - name: config
         emptyDir: {}
       - name: auth-password
         secret:
           secretName: {{ printf "%s-auth-password" $component }}
-      {{- with .Values.nodeSelector }}
+    {{- with index .Values $component }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.affinity }}
+        {{- toYaml .nodeSelector | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+        {{- toYaml .affinity | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .tolerations | nindent 8 }}
     {{- end }}
 
 ---

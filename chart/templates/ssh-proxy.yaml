@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: {{ $component }}
 {{ include "eirinix.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ index .Values $component "replicaCount" }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "eirinix.name" . }}
@@ -28,10 +28,10 @@ spec:
       serviceAccountName: {{ .Values.service_account.name | quote }}
       initContainers:
       - name: generate-config
-        {{- with .Values.image }}
+        {{- with index .Values $component "setup-image" }}
         image: {{ printf "%s/eirinix-%s-setup:%s" .repository $component .tag | quote }}
+        imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: CC_API_URL
           value: {{ index .Values.ssh "cc-api-url" }}
@@ -48,14 +48,14 @@ spec:
           subPath: proxy.key
       containers:
       - name: {{ $component }}
-        {{- with .Values.image }}
-        image: {{ printf "%s/eirinix-%s:%s" .repository $image_component .tag | quote}}
+        {{- with index .Values $component "image" }}
+        image: {{ printf "%s/eirinix-%s:%s" .repository $component .tag | quote }}
+        imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
         command: [ /bin/{{ $component }} ]
         args:
         - --config
         - /run/secrets/config/eirini-ssh-proxy.json
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: SSH_PROXY_KUBERNETES_NAMESPACE
           value: {{ .Values.namespace }}
@@ -71,45 +71,43 @@ spec:
           mountPath: /run/secrets/cc-api-ca.crt
           subPath: ca.crt
         resources:
-          {{- index .Values.resources $component | toYaml | nindent 12 }}
+          {{- index .Values $component "resources" | toYaml | nindent 12 }}
       volumes:
       - name: config
         emptyDir: {}
+      {{- with index .Values $component "secrets" }}
       - name: uaa-client
         secret:
-          secretName:  {{ index .Values $component "secrets" "uaa-client-proxy-secret" }}
+          secretName: {{ index . "uaa-client-proxy-secret" }}
           items:
           - key: password
             path: password
       - name: ssh-proxy-host-key
         secret:
-          secretName: {{ index .Values $component "secrets" "host-keys" }}
+          secretName: {{ index . "host-keys" }}
           items:
           - key: private_key
             path: proxy.key
       - name: uaa-ca-cert
         secret:
-          secretName:  {{ index .Values $component "secrets" "uaa-ca" }}
+          secretName: {{ index . "uaa-ca" }}
           items:
           - key: certificate
             path: ca.crt
       - name: cc-api-ca-cert
         secret:
-          secretName:  {{ index .Values $component "secrets" "cc-api-ca" }}
+          secretName: {{ index . "cc-api-ca" }}
           items:
           - key: certificate
             path: ca.crt
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.affinity }}
+    {{- with index .Values $component }}
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+        {{- toYaml .affinity | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .tolerations | nindent 8 }}
     {{- end }}
 ---
 apiVersion: v1
