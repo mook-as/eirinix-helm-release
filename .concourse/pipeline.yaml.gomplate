@@ -236,12 +236,11 @@ jobs:
       run:
         dir: git.eirinix-helm-release
         path: bin/package
-        args:
-        - --destination=../output
     image: docker.package-base
     params:
       VERSION_FILE: ../output/version.txt
       COMMIT_HASH_FILE: ../output/commit.txt
+      OUTPUT_DIR: ../output/
       OVERRIDES: |
         {{- range $images }}
         {{- if . | strings.HasSuffix "-setup" | not }}
@@ -278,30 +277,18 @@ jobs:
           platform: linux
           inputs:
           - name: git.chart-repository
+          - name: git.eirinix-helm-release
           - name: output
           outputs:
           - name: git.chart-repository
           params:
             GIT_AUTHOR_NAME: {{ $.git.user }}
             GIT_AUTHOR_EMAIL: {{ $.git.email }}
-            FULL_REPO: {{ index $.repos "eirinix-helm-release" }}
+            REPO: {{ index $.repos "eirinix-helm-release" }}
           run:
+            path: ../git.eirinix-helm-release/bin/update-helm-index.rb
             dir: git.chart-repository
-            path: /bin/sh
-            args:
-            - -c
-            - >
-              set -o errexit -o nounset -o xtrace ;
-              VERSION="$(cat ../output/version.txt)" ;
-              ORG="${FULL_REPO%%/*}" ;
-              REPO="${FULL_REPO#*/}" ;
-              URL="https://${ORG}.github.io/${REPO}/" ;
-              cp ../output/eirini-extensions-*.tgz . ;
-              helm repo index --merge index.yaml --url "${URL}" . ;
-              git config --global user.name  "$GIT_AUTHOR_NAME" ;
-              git config --global user.email "$GIT_AUTHOR_EMAIL" ;
-              git add "eirini-extensions-${VERSION}"*.tgz index.yaml ;
-              git commit -m "Add version ${VERSION}" ;
+            args: [ ../output/ ]
         image: docker.package-base
       - put: git.chart-repository
         params:
