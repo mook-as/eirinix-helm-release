@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 # This script packages the helm chart, with a values.yaml that has been modified
-# to contain image tags as passed via environment variables.  The variables are
-# named TAG_FILE_xxx where xxx is the image (e.g. TAG_FILE_LOGGREGATOR_BRIDGE
-# for the loggregator-bridge image), and points to a file that contains the tag
-# to use.  Any options given are passed to `helm package`.
+# by merging with the YAML file contained in the environment variable named
+# `OVERRIDE`.  If the variable `OUTPUT_DIR` is set, the helm chart is output
+# into that directory.  Any options are given to passed to `helm package`.
 
 set -o errexit -o nounset -o pipefail
 
@@ -17,9 +16,12 @@ trap cleanup EXIT
 echo "Copying chart to temporary directory..."
 cp -r chart/* "${dir}"
 
+echo ".output" >> "${dir}/.helmignore"
+
 tag="$(git describe --tag --abbrev=0 --exclude '*+g*' || echo "0.0.0")"
 commits="$(git rev-list --count --first-parent HEAD)"
-hash="$(git log -1 --pretty=%H)"
+hash="$(git log -1 --pretty=%h)"
+time="$(date +%s)"
 extra=""
 
 if [[ -n "${OVERRIDES:-}" ]] ; then
@@ -29,15 +31,18 @@ if [[ -n "${OVERRIDES:-}" ]] ; then
     extra=".$(sha256sum "${dir}/.overrides.yaml" | head -c 8)"
     rm "${dir}/.overrides.yaml"
 fi
-version="${tag#v}-${commits}+g${hash:0:8}"
+version="${tag#v}-${commits}+g${hash}"
 
 # Save information for the concourse pipeline, if requested.
 if [[ -n "${VERSION_FILE:-}" ]] ; then
     echo -n "${version}" > "${VERSION_FILE}"
 fi
 if [[ -n "${COMMIT_HASH_FILE:-}" ]] ; then
-    echo -n "${hash}" > "${COMMIT_HASH_FILE}"
+    git log -1 --pretty=%H | tr -d '\n' > "${COMMIT_HASH_FILE}"
 fi
 
 echo "Packaging chart..."
-helm package "${dir}" --version="${version}${extra}" "${@}"
+mkdir -p "${dir}/.output"
+helm package "${dir}" "${@}" --version="${version}" --destination="${dir}/.output/"
+mv "${dir}/.output/eirini-extensions-${version}.tgz" \
+    "${OUTPUT_DIR:-.}/eirini-extensions-${tag#v}-${commits}-${time}+g${hash}${extra}.tgz"
