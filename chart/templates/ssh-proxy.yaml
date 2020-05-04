@@ -49,7 +49,9 @@ spec:
       containers:
       - name: {{ $component }}
         {{- with index .Values $component "image" }}
-        # Note: this is in the "ssh" image, not "ssh-proxy".
+        # Note: Unlike all other components, the `ssh-proxy` binary lives in the
+        # `eirinix-ssh` docker image.  So we do _not_ use $component here.
+        # https://github.com/SUSE/eirini-ssh/blob/e2ed1ab4/Dockerfile#L15-L16
         image: {{ printf "%s/eirinix-ssh:%s" .repository .tag | quote }}
         imagePullPolicy: {{ .pullPolicy }}
         {{- end }}
