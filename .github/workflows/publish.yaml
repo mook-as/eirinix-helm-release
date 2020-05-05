@@ -21,7 +21,7 @@ jobs:
         cd github-release.chart
         echo "${GITHUB_REF}" > tag
         curl -H "Authorization: ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${GITHUB_REF}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${GITHUB_REF#refs/tags/}" \
           | jq -r '.assets[].name' | xargs touch
       working-directory: ${{ github.workspace }}
     - name: regenerate-index
