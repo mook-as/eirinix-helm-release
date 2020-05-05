@@ -1,0 +1,33 @@
+name: Publish helm chart
+
+on:
+  release:
+    types: [published, edited]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2
+      with:
+        path: git.eirinix-helm-release
+    - name: Checkout helm repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository_owner }}/eirinix-helm-release
+        ref: gh-pages
+        path: git.chart-repository
+    - name: Regenerate index
+      run: >
+        ruby
+        ${{ github.workspace }}/git.eirinix-helm-release/bin/update-helm-index.rb
+        ${{ github.workspace }}/github-release.chart
+      env:
+        REPO: ${{ github.repository }}
+        GIT_AUTHOR_NAME: CI Bot
+        GIT_AUTHOR_EMAIL: ${{ github.repository_owner }}@noreply.github.io
+      working-directory: git.chart-repository
+    - name: Push index
+      run: git push
+      working-directory: git.chart-repository
