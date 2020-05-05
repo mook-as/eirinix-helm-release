@@ -1,0 +1,33 @@
+name: Publish helm chart
+on: [release]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: git.eirinix-helm-release
+    - uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository_owner }}/eirinix-helm-release
+        ref: gh-pages
+        path: git.chart-repository
+    - name: setup-env
+      run: |
+        set -o errexit -o nounset -o xtrace
+        mkdir -p github-release.chart
+        cd github-relase.chart
+        echo "${GITHUB_REF}" > tag
+        curl -H "Authorization: ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/tags/${GITHUB_REF}" \
+          | jq -r '.assets[].name' | xargs touch
+      working-directory: ${{ github.workspace }}
+    - name: regenerate-index
+      run: >
+        ruby
+        ${{ github.workspace }}/git.eirinix-helm-release/bin/update-helm-index.rb
+        ${{ github.workspace }}/github-release.chart
+      env:
+        REPO: ${{ github.repository }}
+      working-directory: git.chart-repository
