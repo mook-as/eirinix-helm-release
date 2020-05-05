@@ -3,20 +3,19 @@
 # This script rebuilds the helm repository index.yaml to add a new entry (or
 # update, if the version already exists), such that the download URL points to
 # GitHub releases.  The changes will be comitted to git.
+# This is expected to run from a GitHub action.
 
 # Usage:
-#  REPO=<repo> $0 <dir>
-
-# <dir>: A directory that contains:
-#    "tag": A file with the git tag for the GitHub release
-#    "eirini-extensions-*.tgz": The chart.
+#  REPO=<repo> GITHUB_TOKEN=<token> GITHUB_REF=<ref> $0
 
 # The working directory must be a git repository for the helm repository.  If a
 # "index.yaml" exists in the working directory, it will be updated; otherwise, a
 # new file is created.
 
 # Required environment variables:
-#   REPO:   The path of the GitHub repository, such as "SUSE/eirinix-helm-release"
+#   REPO:         The path of the GitHub repository, such as "SUSE/eirinix-helm-release"
+#   GITHUB_TOKEN: OAuth token to use for authentication
+#   GITHUB_REF:   GitHub release tag, possiby prefixed by "refs/tags/"
 
 # Optional environment variables:
 #   GIT_AUTHOR_NAME:   If set, git will use this as the author name.
@@ -25,7 +24,9 @@
 require 'date'
 require 'digest'
 require 'erb'
+require 'json'
 require 'rubygems/package'
+require 'tempfile'
 require 'yaml'
 require 'zlib'
 
@@ -37,32 +38,36 @@ def read_chart(path)
     YAML.load(entry.read)
 end
 
-# The path to the directory containing the chart and version info
-def files_dir
-    ARGV.last
+def repo
+    fail 'Environment variable REPO is missing' unless ENV['REPO']
+    ENV['REPO']
 end
 
-# The name of the chart bundle (*.tgz)
-def tar_file_name
-    $tar_file_name ||= Dir.glob('eirini-extensions-*.tgz', base: files_dir).sort.last
+def tag
+    fail 'Environment variable GITHUB_REF is missing' unless ENV['GITHUB_REF']
+    ENV['GITHUB_REF'].delete_prefix 'refs/tags/'
+end
+
+def curl
+    %Q<curl --header 'Authorization: #{ENV['GITHUB_TOKEN']}'>
+end
+
+def release
+    url = "https://api.github.com/repos/#{repo}/releases/tags/#{tag}"
+    JSON.load(`#{curl} '#{url}'`)
+end
+
+def chart_url
+    release['assets'].first['browser_download_url']
 end
 
 # Path to the chart bundle (*.tgz)
 def tar_file_path
-    File.join(files_dir, tar_file_name)
-end
-
-def tag
-    $tag ||= File.read(File.join(files_dir, 'tag')).strip
-end
-
-# The URL to download the chart
-def chart_url
-    repo = ENV['REPO']
-    fail 'Environment variable REPO is missing' unless repo
-    url_tag = ERB::Util.url_encode tag
-    file = ERB::Util.url_encode tar_file_name
-    "https://github.com/#{repo}/releases/download/#{url_tag}/#{file}"
+    return $tar_file.path unless $tar_file.nil?
+    $tar_file = Tempfile.new(['eirinix-chart-', '.tgz']).tap(&:close)
+    Process.wait Process.spawn('curl', '-L', '-o', $tar_file.path, chart_url)
+    fail "Could not download file" unless $?.success?
+    $tar_file.path
 end
 
 # The entry in index.yaml for this chart version
