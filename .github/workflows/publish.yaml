@@ -1,4 +1,5 @@
 name: Publish helm chart
+
 on: release
 
 jobs:
