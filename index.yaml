@@ -26,4 +26,12 @@ entries:
     urls:
     - https://github.com/mook-as/eirinix-helm-release/releases/download/v0.0.0-13%2Bgfb8b8b7/eirini-extensions-0.0.0-13-1588720454%2Bgfb8b8b7.0a15cf12.tgz
     version: 0.0.0-13+gfb8b8b7
-generated: '2020-05-05T23:14:53+00:00'
+  - apiVersion: v1
+    created: '2020-05-05T23:53:30+00:00'
+    description: Eirini Extensions for KubeCF
+    digest: 7fff604f15ba24eb237776d0cdf457173265abe39c11978e90272b317eb92e74
+    name: eirini-extensions
+    urls:
+    - https://github.com/mook-as/eirinix-helm-release/releases/download/v0.0.0-16%2Bg6943828/eirini-extensions-0.0.0-16-1588722752%2Bg6943828.6c184a84.tgz
+    version: 0.0.0-16+g6943828
+generated: '2020-05-05T23:53:30+00:00'
