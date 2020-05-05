@@ -1,5 +1,5 @@
 name: Publish helm chart
-on: [release]
+on: release
 
 jobs:
   publish:
