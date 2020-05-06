@@ -33,6 +33,8 @@ if [[ -n "${OVERRIDES:-}" ]] ; then
 fi
 version="${tag#v}-${commits}+g${hash}"
 
+filename="eirini-extensions-${tag#v}-${commits}-${time}+g${hash}${extra}.tgz"
+
 # Save information for the concourse pipeline, if requested.
 if [[ -n "${VERSION_FILE:-}" ]] ; then
     echo -n "${version}" > "${VERSION_FILE}"
@@ -44,5 +46,10 @@ fi
 echo "Packaging chart..."
 mkdir -p "${dir}/.output"
 helm package "${dir}" "${@}" --version="${version}" --destination="${dir}/.output/"
-mv "${dir}/.output/eirini-extensions-${version}.tgz" \
-    "${OUTPUT_DIR:-.}/eirini-extensions-${tag#v}-${commits}-${time}+g${hash}${extra}.tgz"
+mv "${dir}/.output/eirini-extensions-${version}.tgz" "${OUTPUT_DIR:-.}/${filename}"
+
+if [ -n "${OUTPUT_DIR:-}" ] ; then
+    # For CI builds, we want a body text that changes every time so that the
+    # helm chart repository will get updated
+    echo "Automated release ${filename}" > "${OUTPUT_DIR}/body.txt"
+fi
