@@ -39,16 +39,7 @@ spec:
               service_name: eirini-persi
               service_id: eirini-persi
               plans:
-                {{- range index . "service-plans" }}
-                - plan_id: {{ .id }}
-                  plan_name: {{ .name }}
-                  description: {{ .description }}
-                  {{- with .kube_storage_class }}
-                  kube_storage_class: {{ . }}
-                  {{- end }}
-                  free: {{ .free }}
-                  default_size: {{ .default_size }}
-                {{- end }}
+                {{- index . "service-plans" | toYaml | nindent 16 }}
               description: {{ .description }}
               long_description: {{ .long_description }}
               provider_display_name: {{ .provider_display_name }}
