@@ -102,6 +102,7 @@ else
     old_entry.merge! entry
     message = "Update version #{entry['version']}"
 end
+puts "#{message} with #{entry['urls'].first}"
 index['generated'] = DateTime.now.rfc3339
 
 File.open('index.yaml', 'w') { |f| YAML.dump(index, f) }
