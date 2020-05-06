@@ -6,6 +6,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+    - run: echo '${{ github.event }}'
     - uses: actions/checkout@v2
       with:
         path: git.eirinix-helm-release
