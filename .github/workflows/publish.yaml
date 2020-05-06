@@ -9,10 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: echo '${{ github.event.action }}'
-    - uses: actions/checkout@v2
+    - name: Checkout sources
+      uses: actions/checkout@v2
       with:
         path: git.eirinix-helm-release
-    - uses: actions/checkout@v2
+    - name: Checkout helm repository
+      uses: actions/checkout@v2
       with:
         repository: ${{ github.repository_owner }}/eirinix-helm-release
         ref: gh-pages
