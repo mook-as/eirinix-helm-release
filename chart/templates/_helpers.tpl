@@ -28,7 +28,7 @@ If release name contains chart name it will be used as a full name.
 Expand the name of a component.
 */}}
 {{- define "eirinix.component-name" -}}
-{{- printf "%s-%s" .Release.Name .name | trunc 63 | trimSuffix "-" -}}
+{{- .name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
