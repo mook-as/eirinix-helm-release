@@ -47,7 +47,7 @@ spec:
                   kube_storage_class: {{ . }}
                   {{- end }}
                   free: {{ .free }}
-                  deault_size: {{ .default_size }}
+                  default_size: {{ .default_size }}
                 {{- end }}
               description: {{ .description }}
               long_description: {{ .long_description }}
