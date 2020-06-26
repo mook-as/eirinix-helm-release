@@ -43,7 +43,7 @@ spec:
                 - plan_id: {{ .id }}
                   plan_name: {{ .name }}
                   description: {{ .description }}
-		  {{ with .kube_storage_class }}
+                  {{- with .kube_storage_class }}
                   kube_storage_class: {{ . }}
                   {{- end }}
                   free: {{ .free }}
